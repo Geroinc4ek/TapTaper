@@ -44,7 +44,7 @@
     <div id="game-container">
         <h1>Ура, Разраб сделал игру</h1>
         <p>Очки: <span id="score">0</span></p>
-        <p id="cooldown-display">КД: 0.5 сек</p>
+        <p id="cooldown-display">КД: 1 сек</p>
         <img id="click-image" src="image.jpg" alt="Кликни меня!">
         <div id="shop">
             <h2>Магазин</h2>
@@ -54,6 +54,8 @@
             <button onclick="buyBooster(1000, 100)">Бустер +100 (1000 очков)</button>
             <button onclick="buyBooster(7500, 1000)">Бустер +1000 (7500 очков)</button>
             <button onclick="buyBooster(50000, 10000)">Бустер +10000 (50000 очков)</button>
+            <button onclick="buyBooster(700000, 1000000)">Бустер +1000000 (700000 очков)</button>
+            <button onclick="buyBooster(9000000, 10000000)">Бустер +10000000 (9000000 очков)</button>
             <button onclick="buyCooldownReduction(1700, 0.05)">Уменьшить КД на 0.05с (1700 очков)</button>
             <button onclick="syncWithBot()">Синхронизировать с ботом</button>
         </div>
@@ -65,7 +67,7 @@
 
         let score = 0;
         let clickValue = 1;
-        let cooldown = 0.5;
+        let cooldown = 1;
         let lastClick = 0;
         let username = "Unknown"; // Имя будет перезаписано ботом
         const scoreElement = document.getElementById('score');
