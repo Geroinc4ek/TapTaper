@@ -42,7 +42,7 @@
 </head>
 <body>
     <div id="game-container">
-        <h1>Ах, Еще</h1>
+        <h1>Ай, Ай, Ай</h1>
         <p>Очки: <span id="score">0</span></p>
         <p id="cooldown-display">КД: 0.5 сек</p>
         <img id="click-image" src="image.jpg" alt="Кликни меня!">
@@ -54,7 +54,7 @@
             <button onclick="buyBooster(1000, 100)">Бустер +100 (1000 очков)</button>
             <button onclick="buyBooster(7500, 1000)">Бустер +1000 (7500 очков)</button>
             <button onclick="buyBooster(50000, 10000)">Бустер +10000 (50000 очков)</button>
-            <button onclick="buyCooldownReduction(500, 0.1)">Уменьшить КД на 0.1с (500 очков)</button>
+            <button onclick="buyCooldownReduction(1700, 0.1)">Уменьшить КД на 0.1с (500 очков)</button>
             <button onclick="generateSyncLink()">Получить ссылку для синхронизации</button>
         </div>
         <p id="error-message" style="display: none;">Telegram Web App не работает</p>
@@ -72,7 +72,7 @@
         const cooldownDisplay = document.getElementById('cooldown-display');
         const clickImage = document.getElementById('click-image');
         const errorMessage = document.getElementById('error-message');
-        const BOT_USERNAME = "GoreAndCristleGameBot"; // Имя бота добавлено сюда
+        const BOT_USERNAME = "GoreAndCristleGameBot";
 
         // Проверка доступности localStorage
         function checkLocalStorage() {
@@ -110,45 +110,22 @@
         // Сохранение локальных данных
         function saveLocalData() {
             if (checkLocalStorage()) {
-                const data = { score, clickValue, cooldown, username };
+                const data = { score: score, clickValue: clickValue, cooldown: cooldown, username: username };
                 localStorage.setItem('clickerData', JSON.stringify(data));
                 console.log("Сохранены локальные данные:", data);
             }
         }
 
-        // Инициализация Telegram Web App (для получения username)
-        function initializeWebApp(attempt = 1, maxAttempts = 5) {
-            console.log(`Попытка ${attempt} инициализации Telegram Web App...`);
-            if (window.Telegram && window.Telegram.WebApp) {
-                console.log("Telegram Web App доступен");
-                window.Telegram.WebApp.ready();
-                const initData = window.Telegram.WebApp.initDataUnsafe;
-                username = initData?.user?.username || initData?.user?.first_name || "Unknown";
-                console.log("Пользователь Telegram:", initData?.user || "Нет данных");
-                saveLocalData();
-            } else {
-                console.log("window.Telegram:", window.Telegram);
-                if (attempt < maxAttempts) {
-                    console.log(`Telegram Web App не найден, повтор через 1 сек (попытка ${attempt + 1}/${maxAttempts})...`);
-                    setTimeout(() => initializeWebApp(attempt + 1, maxAttempts), 1000);
-                } else {
-                    console.warn("Telegram Web App не загрузился");
-                    errorMessage.style.display = "block";
-                    loadLocalData();
-                }
-            }
-        }
-
         // Генерация ссылки для синхронизации
         function generateSyncLink() {
-            const data = { score, clickValue, cooldown, username };
-            const encodedData = btoa(JSON.stringify(data)); // Кодируем в base64
+            const data = { score: score, clickValue: clickValue, cooldown: cooldown, username: username };
+            console.log("Данные перед кодированием:", data); // Отладка текущих значений
+            const encodedData = btoa(JSON.stringify(data));
             const syncLink = `t.me/${BOT_USERNAME}?start=sync_${encodedData}`;
             console.log("Сгенерирована ссылка для синхронизации:", syncLink);
             
-            // Копируем ссылку в буфер обмена
             navigator.clipboard.writeText(syncLink).then(() => {
-                alert("Ссылка для синхронизации скопирована в буфер обмена! Отправь её боту @GoreAndCristleGameBot.");
+                alert("Ссылка для синхронизации скопирована! Отправь её боту @GoreAndCristleGameBot.");
             }).catch(err => {
                 console.error("Ошибка копирования:", err);
                 alert(`Не удалось скопировать ссылку. Отправь вручную: ${syncLink}`);
@@ -156,9 +133,8 @@
         }
 
         // Запуск
-        console.log("Начальная проверка Telegram Web App и localStorage");
+        console.log("Начальная проверка localStorage");
         loadLocalData();
-        initializeWebApp();
 
         // Обработка клика с КД
         clickImage.addEventListener('click', () => {
