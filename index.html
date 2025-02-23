@@ -42,7 +42,7 @@
 </head>
 <body>
     <div id="game-container">
-        <h1>ОАОАОА</h1>
+        <h1>Да, делай это жесче</h1>
         <p>Очки: <span id="score">0</span></p>
         <p id="cooldown-display">КД: 0.5 сек</p>
         <img id="click-image" src="image.jpg" alt="Кликни меня!">
@@ -56,7 +56,7 @@
             <button onclick="buyBooster(50000, 10000)">Бустер +10000 (50000 очков)</button>
             <button onclick="buyCooldownReduction(500, 0.1)">Уменьшить КД на 0.1с (500 очков)</button>
         </div>
-        <p id="error-message" style="display: none;">Открой игру через Telegram-бота!</p>
+        <p id="error-message" style="display: none;">Telegram Web App не загрузился, но игра работает локально</p>
     </div>
 
     <script>
@@ -74,17 +74,16 @@
 
         // Проверка Telegram Web App с повторными попытками
         function initializeWebApp(attempt = 1, maxAttempts = 5) {
-            console.log(`Attempt ${attempt} to initialize Telegram Web App...`);
+            console.log(`Попытка ${attempt} инициализации Telegram Web App...`);
             if (window.Telegram && window.Telegram.WebApp) {
-                console.log("Telegram Web App is available");
+                console.log("Telegram Web App доступен");
                 window.Telegram.WebApp.ready();
                 isWebAppReady = true;
                 const initData = window.Telegram.WebApp.initDataUnsafe;
-                console.log("Telegram user:", initData?.user || "No user data");
+                console.log("Пользователь Telegram:", initData?.user || "Нет данных о пользователе");
 
-                // Загрузка сохранённых данных
                 window.Telegram.WebApp.onEvent('web_app_data', (event) => {
-                    console.log("Received data from bot:", event.data);
+                    console.log("Получены данные от бота:", event.data);
                     if (event.data) {
                         const data = JSON.parse(event.data);
                         score = data.score || 0;
@@ -92,29 +91,28 @@
                         cooldown = data.cooldown || 0.5;
                         scoreElement.textContent = score;
                         cooldownDisplay.textContent = `КД: ${cooldown.toFixed(1)} сек`;
-                        console.log("Loaded data:", data);
+                        console.log("Загруженные данные:", data);
                     } else {
-                        console.log("No data received from bot");
+                        console.log("Данные от бота не получены");
                     }
                 });
                 window.Telegram.WebApp.sendData(JSON.stringify({ request: "load" }));
-                console.log("Requested saved data from bot");
+                console.log("Запрос сохранённых данных отправлен");
             } else {
-                console.log("Telegram object:", window.Telegram);
-                console.log("Telegram.WebApp object:", window.Telegram ? window.Telegram.WebApp : "undefined");
+                console.log("window.Telegram:", window.Telegram);
+                console.log("window.Telegram.WebApp:", window.Telegram ? window.Telegram.WebApp : "undefined");
                 if (attempt < maxAttempts) {
-                    console.log(`Telegram Web App not found, retrying in 2 seconds (attempt ${attempt + 1}/${maxAttempts})...`);
+                    console.log(`Telegram Web App не найден, повтор через 2 сек (попытка ${attempt + 1}/${maxAttempts})...`);
                     setTimeout(() => initializeWebApp(attempt + 1, maxAttempts), 2000);
                 } else {
-                    console.error("Telegram Web App is not available after all attempts");
+                    console.warn("Telegram Web App не загрузился после всех попыток, игра работает локально");
                     errorMessage.style.display = "block";
-                    clickImage.style.pointerEvents = "none";
                 }
             }
         }
 
-        // Проверка сразу и с повторными попытками
-        console.log("Initial check for Telegram Web App");
+        // Запуск проверки
+        console.log("Начальная проверка Telegram Web App");
         initializeWebApp();
 
         // Обработка клика с КД
@@ -125,9 +123,9 @@
                 scoreElement.textContent = score;
                 lastClick = now;
                 syncWithTelegram();
-                console.log("Click registered, score:", score);
+                console.log("Клик зарегистрирован, счёт:", score);
             } else {
-                console.log("Cooldown active, wait:", (cooldown - (now - lastClick)).toFixed(2), "sec");
+                console.log("КД активен, жди:", (cooldown - (now - lastClick)).toFixed(2), "сек");
             }
         });
 
@@ -139,7 +137,7 @@
                 scoreElement.textContent = score;
                 syncWithTelegram();
                 alert(`Куплен бустер! Теперь за клик: ${clickValue} очков`);
-                console.log("Booster bought, clickValue:", clickValue);
+                console.log("Куплен бустер, clickValue:", clickValue);
             } else {
                 alert("Недостаточно очков!");
             }
@@ -155,7 +153,7 @@
                     cooldownDisplay.textContent = `КД: ${cooldown.toFixed(1)} сек`;
                     syncWithTelegram();
                     alert(`КД уменьшен! Теперь КД: ${cooldown.toFixed(1)} сек`);
-                    console.log("Cooldown reduced, new cooldown:", cooldown);
+                    console.log("КД уменьшен, новый КД:", cooldown);
                 } else {
                     alert("КД уже минимальный!");
                 }
@@ -174,12 +172,12 @@
                 };
                 try {
                     window.Telegram.WebApp.sendData(JSON.stringify(data));
-                    console.log("Data sent to Telegram:", data);
+                    console.log("Данные отправлены в Telegram:", data);
                 } catch (error) {
-                    console.error("Failed to send data to Telegram:", error);
+                    console.error("Ошибка отправки данных в Telegram:", error);
                 }
             } else {
-                console.error("Cannot sync: Telegram Web App is not fully initialized");
+                console.warn("Синхронизация недоступна: Telegram Web App не инициализирован");
             }
         }
     </script>
