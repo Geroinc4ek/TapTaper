@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кликер</title>
+    <title>Хуикер</title>
     <style>
         body {
             margin: 0;
@@ -41,7 +41,7 @@
 </head>
 <body>
     <div id="game-container">
-        <h1>Бля бей больно пж</h1>
+        <h1>Уеби меня сильнее</h1>
         <p>Очки: <span id="score">0</span></p>
         <p id="cooldown-display">КД: 0.5 сек</p>
         <img id="click-image" src="image.jpg" alt="Кликни меня!">
@@ -66,14 +66,16 @@
         const cooldownDisplay = document.getElementById('cooldown-display');
         const clickImage = document.getElementById('click-image');
 
-        // Инициализация Telegram Web App
-        if (window.Telegram?.WebApp) {
+        // Проверка Telegram Web App
+        if (window.Telegram && window.Telegram.WebApp) {
+            console.log("Telegram Web App is available");
             window.Telegram.WebApp.ready();
             const initData = window.Telegram.WebApp.initDataUnsafe;
-            console.log("Telegram user:", initData?.user);
+            console.log("Telegram user:", initData?.user || "No user data");
 
             // Загрузка сохранённых данных
             window.Telegram.WebApp.onEvent('web_app_data', (event) => {
+                console.log("Received data from bot:", event.data);
                 if (event.data) {
                     const data = JSON.parse(event.data);
                     score = data.score || 0;
@@ -85,6 +87,9 @@
                 }
             });
             window.Telegram.WebApp.sendData(JSON.stringify({ request: "load" }));
+            console.log("Requested saved data from bot");
+        } else {
+            console.error("Telegram Web App is not available");
         }
 
         // Обработка клика с КД
@@ -136,7 +141,7 @@
 
         // Синхронизация с Telegram
         function syncWithTelegram() {
-            if (window.Telegram?.WebApp) {
+            if (window.Telegram && window.Telegram.WebApp) {
                 const data = {
                     score: score,
                     clickValue: clickValue,
@@ -144,6 +149,8 @@
                 };
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
                 console.log("Data sent to Telegram:", data);
+            } else {
+                console.error("Cannot sync: Telegram Web App is not available");
             }
         }
     </script>
