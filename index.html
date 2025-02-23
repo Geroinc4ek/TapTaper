@@ -25,67 +25,25 @@
             border-radius: 15px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
         }
-        h1 {
-            font-size: 36px;
-            margin-bottom: 20px;
-            color: #ffd700;
-        }
-        #score {
-            font-size: 28px;
-            margin: 20px 0;
-            color: #00ffcc;
-        }
-        #cooldown-display { /* Новый элемент для отображения КД */
-            font-size: 20px;
-            color: #ff69b4;
-        }
-        #click-image {
-            width: 200px;
-            height: 200px;
-            cursor: pointer;
-            transition: transform 0.1s ease;
-            border-radius: 10px;
-        }
-        #click-image:hover {
-            transform: scale(1.05);
-        }
-        #click-image:active {
-            transform: scale(0.95);
-        }
-        #shop {
-            margin-top: 30px;
-        }
-        h2 {
-            font-size: 24px;
-            color: #ff69b4;
-        }
-        button {
-            padding: 12px 24px;
-            margin: 8px;
-            background: linear-gradient(45deg, #ff4500, #ff8c00);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-        button:hover {
-            transform: translateY(-2px);
-            background: linear-gradient(45deg, #ff8c00, #ffa500);
-        }
-        button:active {
-            transform: translateY(1px);
-        }
+        h1 { font-size: 36px; margin-bottom: 20px; color: #ffd700; }
+        #score { font-size: 28px; margin: 20px 0; color: #00ffcc; }
+        #cooldown-display { font-size: 20px; color: #ff69b4; }
+        #click-image { width: 200px; height: 200px; cursor: pointer; transition: transform 0.1s ease; border-radius: 10px; }
+        #click-image:hover { transform: scale(1.05); }
+        #click-image:active { transform: scale(0.95); }
+        #shop { margin-top: 30px; }
+        h2 { font-size: 24px; color: #ff69b4; }
+        button { padding: 12px 24px; margin: 8px; background: linear-gradient(45deg, #ff4500, #ff8c00); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: transform 0.2s, background 0.2s; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); }
+        button:hover { transform: translateY(-2px); background: linear-gradient(45deg, #ff8c00, #ffa500); }
+        button:active { transform: translateY(1px); }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
-        <h1>Уеби меня по братски</h1>
+        <h1>Бля бей больно пж</h1>
         <p>Очки: <span id="score">0</span></p>
-        <p id="cooldown-display">КД: 0.5 сек</p> <!-- Отображение текущего КД -->
+        <p id="cooldown-display">КД: 0.1 сек</p>
         <img id="click-image" src="image.jpg" alt="Кликни меня!">
         <div id="shop">
             <h2>Магазин</h2>
@@ -101,20 +59,20 @@
 
     <script>
         let score = 0;
-        let clickValue = 1; // Очки за клик
-        let cooldown = 0.5; // Начальный КД в секундах
-        let lastClick = 0;  // Время последнего клика
+        let clickValue = 1;
+        let cooldown = 0.1;
+        let lastClick = 0;
         const scoreElement = document.getElementById('score');
         const cooldownDisplay = document.getElementById('cooldown-display');
         const clickImage = document.getElementById('click-image');
 
-        // Инициализация Telegram Web App и загрузка данных
+        // Инициализация Telegram Web App
         if (window.Telegram?.WebApp) {
             window.Telegram.WebApp.ready();
             const initData = window.Telegram.WebApp.initDataUnsafe;
             console.log("Telegram user:", initData?.user);
 
-            // Получение сохранённых данных от бота
+            // Загрузка сохранённых данных
             window.Telegram.WebApp.onEvent('web_app_data', (event) => {
                 if (event.data) {
                     const data = JSON.parse(event.data);
@@ -123,7 +81,7 @@
                     cooldown = data.cooldown || 0.5;
                     scoreElement.textContent = score;
                     cooldownDisplay.textContent = `КД: ${cooldown.toFixed(1)} сек`;
-                    console.log("Loaded data:", data); // Отладка
+                    console.log("Loaded data:", data);
                 }
             });
             window.Telegram.WebApp.sendData(JSON.stringify({ request: "load" }));
@@ -131,15 +89,15 @@
 
         // Обработка клика с КД
         clickImage.addEventListener('click', () => {
-            const now = Date.now() / 1000; // Текущее время в секундах
+            const now = Date.now() / 1000;
             if (now - lastClick >= cooldown) {
                 score += clickValue;
                 scoreElement.textContent = score;
                 lastClick = now;
                 syncWithTelegram();
-                console.log("Click registered, score:", score); // Отладка
+                console.log("Click registered, score:", score);
             } else {
-                console.log("Cooldown active, wait:", (cooldown - (now - lastClick)).toFixed(2), "sec"); // Отладка
+                console.log("Cooldown active, wait:", (cooldown - (now - lastClick)).toFixed(2), "sec");
             }
         });
 
@@ -151,7 +109,7 @@
                 scoreElement.textContent = score;
                 syncWithTelegram();
                 alert(`Куплен бустер! Теперь за клик: ${clickValue} очков`);
-                console.log("Booster bought, clickValue:", clickValue); // Отладка
+                console.log("Booster bought, clickValue:", clickValue);
             } else {
                 alert("Недостаточно очков!");
             }
@@ -160,14 +118,14 @@
         // Покупка сокращения КД
         function buyCooldownReduction(cost, reduction) {
             if (score >= cost) {
-                if (cooldown - reduction >= 0) { // КД не может быть меньше 0
+                if (cooldown - reduction >= 0) {
                     score -= cost;
                     cooldown -= reduction;
                     scoreElement.textContent = score;
                     cooldownDisplay.textContent = `КД: ${cooldown.toFixed(1)} сек`;
                     syncWithTelegram();
                     alert(`КД уменьшен! Теперь КД: ${cooldown.toFixed(1)} сек`);
-                    console.log("Cooldown reduced, new cooldown:", cooldown); // Отладка
+                    console.log("Cooldown reduced, new cooldown:", cooldown);
                 } else {
                     alert("КД уже минимальный!");
                 }
@@ -185,7 +143,7 @@
                     cooldown: cooldown
                 };
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
-                console.log("Data sent to Telegram:", data); // Отладка
+                console.log("Data sent to Telegram:", data);
             }
         }
     </script>
