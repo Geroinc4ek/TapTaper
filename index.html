@@ -8,22 +8,22 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Roboto', sans-serif; /* Стильный шрифт */
+            font-family: 'Roboto', sans-serif;
             background: url('background.jpg') no-repeat center center fixed; /* Замени на свою картинку */
             background-size: cover;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #fff; /* Белый текст для контраста */
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8); /* Тень для читаемости */
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
         }
         #game-container {
             max-width: 600px;
-            background: rgba(0, 0, 0, 0.7); /* Полупрозрачный черный фон */
+            background: rgba(0, 0, 0, 0.7);
             padding: 20px;
             border-radius: 15px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5); /* Тень для контейнера */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
         }
         h1 {
             font-size: 36px;
@@ -33,20 +33,20 @@
         #score {
             font-size: 28px;
             margin: 20px 0;
-            color: #00ffcc; /* Яркий бирюзовый для очков */
+            color: #00ffcc; /* Бирюзовый для очков */
         }
         #click-image {
             width: 200px;
             height: 200px;
             cursor: pointer;
-            transition: transform 0.1s ease; /* Плавная анимация */
-            border-radius: 10px; /* Скругленные углы */
+            transition: transform 0.1s ease;
+            border-radius: 10px;
         }
         #click-image:hover {
-            transform: scale(1.05); /* Увеличение при наведении */
+            transform: scale(1.05);
         }
         #click-image:active {
-            transform: scale(0.95); /* Уменьшение при клике */
+            transform: scale(0.95);
         }
         #shop {
             margin-top: 30px;
@@ -58,7 +58,7 @@
         button {
             padding: 12px 24px;
             margin: 8px;
-            background: linear-gradient(45deg, #ff4500, #ff8c00); /* Градиент */
+            background: linear-gradient(45deg, #ff4500, #ff8c00);
             color: white;
             border: none;
             border-radius: 8px;
@@ -68,20 +68,20 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         button:hover {
-            transform: translateY(-2px); /* Подъем при наведении */
+            transform: translateY(-2px);
             background: linear-gradient(45deg, #ff8c00, #ffa500);
         }
         button:active {
-            transform: translateY(1px); /* Нажатие */
+            transform: translateY(1px);
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"> <!-- Подключаем шрифт -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
-        <h1>Уеби меня по братски</h1>
+        <h1>Кликер на картинки</h1>
         <p>Очки: <span id="score">0</span></p>
-        <img id="click-image" src="image.jpg" alt="Кликни меня!">
+        <img id="click-image" src="image.png" alt="Кликни меня!"> <!-- Замени на свою картинку -->
         <div id="shop">
             <h2>Магазин</h2>
             <button onclick="buyBooster(75, 2)">Бустер +2 (75 очков)</button>
@@ -90,37 +90,73 @@
             <button onclick="buyBooster(1000, 100)">Бустер +100 (1000 очков)</button>
             <button onclick="buyBooster(7500, 1000)">Бустер +1000 (7500 очков)</button>
             <button onclick="buyBooster(50000, 10000)">Бустер +10000 (50000 очков)</button>
+            <button onclick="buyCooldownReduction(500, 0.1)">Уменьшить КД на 0.1с (500 очков)</button>
         </div>
     </div>
 
     <script>
         let score = 0;
         let clickValue = 1; // Очки за клик
+        let cooldown = 0.5; // Начальный КД в секундах
+        let lastClick = 0;  // Время последнего клика
         const scoreElement = document.getElementById('score');
         const clickImage = document.getElementById('click-image');
 
-        // Загрузка данных из Telegram (если есть)
+        // Инициализация Telegram Web App и загрузка данных
         if (window.Telegram?.WebApp) {
             window.Telegram.WebApp.ready();
             const initData = window.Telegram.WebApp.initDataUnsafe;
-            console.log("Telegram user:", initData?.user); // Для отладки
+            console.log("Telegram user:", initData?.user);
+
+            // Получение сохранённых данных от бота
+            window.Telegram.WebApp.onEvent('web_app_data', (event) => {
+                if (event.data) {
+                    const data = JSON.parse(event.data);
+                    score = data.score || 0;
+                    clickValue = data.clickValue || 1;
+                    cooldown = data.cooldown || 0.5;
+                    scoreElement.textContent = score;
+                }
+            });
+            window.Telegram.WebApp.sendData(JSON.stringify({ request: "load" })); // Запрос данных
         }
 
-        // Обработка клика
+        // Обработка клика с КД
         clickImage.addEventListener('click', () => {
-            score += clickValue;
-            scoreElement.textContent = score;
-            syncWithTelegram();
+            const now = Date.now() / 1000; // Текущее время в секундах
+            if (now - lastClick >= cooldown) {
+                score += clickValue;
+                scoreElement.textContent = score;
+                lastClick = now;
+                syncWithTelegram();
+            }
         });
 
-        // Покупка бустера (суммирование)
+        // Покупка бустера
         function buyBooster(cost, multiplier) {
             if (score >= cost) {
                 score -= cost;
-                clickValue += multiplier; // Суммируем с текущим значением
+                clickValue += multiplier;
                 scoreElement.textContent = score;
                 syncWithTelegram();
                 alert(`Куплен бустер! Теперь за клик: ${clickValue} очков`);
+            } else {
+                alert("Недостаточно очков!");
+            }
+        }
+
+        // Покупка сокращения КД
+        function buyCooldownReduction(cost, reduction) {
+            if (score >= cost) {
+                if (cooldown - reduction >= 0) { // КД не может быть меньше 0
+                    score -= cost;
+                    cooldown -= reduction;
+                    scoreElement.textContent = score;
+                    syncWithTelegram();
+                    alert(`КД уменьшен! Теперь КД: ${cooldown.toFixed(1)} сек`);
+                } else {
+                    alert("КД уже минимальный!");
+                }
             } else {
                 alert("Недостаточно очков!");
             }
@@ -131,7 +167,8 @@
             if (window.Telegram?.WebApp) {
                 window.Telegram.WebApp.sendData(JSON.stringify({
                     score: score,
-                    clickValue: clickValue
+                    clickValue: clickValue,
+                    cooldown: cooldown
                 }));
             }
         }
