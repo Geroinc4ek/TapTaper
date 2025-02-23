@@ -43,7 +43,7 @@
     <div id="game-container">
         <h1>Бля бей больно пж</h1>
         <p>Очки: <span id="score">0</span></p>
-        <p id="cooldown-display">КД: 0.1 сек</p>
+        <p id="cooldown-display">КД: 0.5 сек</p>
         <img id="click-image" src="image.jpg" alt="Кликни меня!">
         <div id="shop">
             <h2>Магазин</h2>
@@ -60,7 +60,7 @@
     <script>
         let score = 0;
         let clickValue = 1;
-        let cooldown = 0.1;
+        let cooldown = 1;
         let lastClick = 0;
         const scoreElement = document.getElementById('score');
         const cooldownDisplay = document.getElementById('cooldown-display');
