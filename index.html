@@ -42,7 +42,7 @@
 </head>
 <body>
     <div id="game-container">
-        <h1>Уф, сигма</h1>
+        <h1>Ах, Еще</h1>
         <p>Очки: <span id="score">0</span></p>
         <p id="cooldown-display">КД: 0.5 сек</p>
         <img id="click-image" src="image.jpg" alt="Кликни меня!">
@@ -55,7 +55,7 @@
             <button onclick="buyBooster(7500, 1000)">Бустер +1000 (7500 очков)</button>
             <button onclick="buyBooster(50000, 10000)">Бустер +10000 (50000 очков)</button>
             <button onclick="buyCooldownReduction(500, 0.1)">Уменьшить КД на 0.1с (500 очков)</button>
-            <button onclick="syncWithBot()">Синхронизация с ботом</button>
+            <button onclick="generateSyncLink()">Получить ссылку для синхронизации</button>
         </div>
         <p id="error-message" style="display: none;">Telegram Web App не работает</p>
     </div>
@@ -67,12 +67,12 @@
         let clickValue = 1;
         let cooldown = 0.5;
         let lastClick = 0;
-        let isWebAppReady = false;
         let username = "Unknown";
         const scoreElement = document.getElementById('score');
         const cooldownDisplay = document.getElementById('cooldown-display');
         const clickImage = document.getElementById('click-image');
         const errorMessage = document.getElementById('error-message');
+        const BOT_USERNAME = "GoreAndCristleGameBot"; // Имя бота добавлено сюда
 
         // Проверка доступности localStorage
         function checkLocalStorage() {
@@ -116,33 +116,16 @@
             }
         }
 
-        // Инициализация Telegram Web App
+        // Инициализация Telegram Web App (для получения username)
         function initializeWebApp(attempt = 1, maxAttempts = 5) {
             console.log(`Попытка ${attempt} инициализации Telegram Web App...`);
             if (window.Telegram && window.Telegram.WebApp) {
                 console.log("Telegram Web App доступен");
                 window.Telegram.WebApp.ready();
-                isWebAppReady = true;
                 const initData = window.Telegram.WebApp.initDataUnsafe;
                 username = initData?.user?.username || initData?.user?.first_name || "Unknown";
                 console.log("Пользователь Telegram:", initData?.user || "Нет данных");
-
-                window.Telegram.WebApp.onEvent('web_app_data', (event) => {
-                    console.log("Получены данные от бота:", event.data);
-                    if (event.data) {
-                        const data = JSON.parse(event.data);
-                        score = data.score || 0;
-                        clickValue = data.clickValue || 1;
-                        cooldown = data.cooldown || 0.5;
-                        username = data.username || username;
-                        scoreElement.textContent = score;
-                        cooldownDisplay.textContent = `КД: ${cooldown.toFixed(1)} сек`;
-                        console.log("Загружены данные Telegram:", data);
-                        saveLocalData();
-                    }
-                });
-                window.Telegram.WebApp.sendData(JSON.stringify({ request: "load" }));
-                console.log("Запрос сохранённых данных отправлен");
+                saveLocalData();
             } else {
                 console.log("window.Telegram:", window.Telegram);
                 if (attempt < maxAttempts) {
@@ -154,6 +137,22 @@
                     loadLocalData();
                 }
             }
+        }
+
+        // Генерация ссылки для синхронизации
+        function generateSyncLink() {
+            const data = { score, clickValue, cooldown, username };
+            const encodedData = btoa(JSON.stringify(data)); // Кодируем в base64
+            const syncLink = `t.me/${BOT_USERNAME}?start=sync_${encodedData}`;
+            console.log("Сгенерирована ссылка для синхронизации:", syncLink);
+            
+            // Копируем ссылку в буфер обмена
+            navigator.clipboard.writeText(syncLink).then(() => {
+                alert("Ссылка для синхронизации скопирована в буфер обмена! Отправь её боту @GoreAndCristleGameBot.");
+            }).catch(err => {
+                console.error("Ошибка копирования:", err);
+                alert(`Не удалось скопировать ссылку. Отправь вручную: ${syncLink}`);
+            });
         }
 
         // Запуск
@@ -205,29 +204,6 @@
                 }
             } else {
                 alert("Недостаточно очков!");
-            }
-        }
-
-        // Синхронизация с ботом по кнопке
-        function syncWithBot() {
-            if (isWebAppReady && window.Telegram && window.Telegram.WebApp) {
-                const data = {
-                    score: score,
-                    clickValue: clickValue,
-                    cooldown: cooldown,
-                    username: username
-                };
-                try {
-                    window.Telegram.WebApp.sendData(JSON.stringify(data));
-                    console.log("Данные отправлены в Telegram:", data);
-                    alert("Синхронизация прошла успешно!");
-                } catch (error) {
-                    console.error("Ошибка отправки данных:", error);
-                    alert("Ошибка синхронизации!");
-                }
-            } else {
-                console.log("Telegram Web App недоступен");
-                alert("Telegram Web App не работает, данные сохранены локально");
             }
         }
     </script>
