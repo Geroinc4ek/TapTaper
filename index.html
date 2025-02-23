@@ -42,7 +42,7 @@
 </head>
 <body>
     <div id="game-container">
-        <h1>Ладно, еби</h1>
+        <h1>Уф, сигма</h1>
         <p>Очки: <span id="score">0</span></p>
         <p id="cooldown-display">КД: 0.5 сек</p>
         <img id="click-image" src="image.jpg" alt="Кликни меня!">
@@ -55,8 +55,9 @@
             <button onclick="buyBooster(7500, 1000)">Бустер +1000 (7500 очков)</button>
             <button onclick="buyBooster(50000, 10000)">Бустер +10000 (50000 очков)</button>
             <button onclick="buyCooldownReduction(500, 0.1)">Уменьшить КД на 0.1с (500 очков)</button>
+            <button onclick="syncWithBot()">Синхронизация с ботом</button>
         </div>
-        <p id="error-message" style="display: none;">Telegram Web App не работает, использую локальное сохранение</p>
+        <p id="error-message" style="display: none;">Telegram Web App не работает</p>
     </div>
 
     <script>
@@ -67,6 +68,7 @@
         let cooldown = 0.5;
         let lastClick = 0;
         let isWebAppReady = false;
+        let username = "Unknown";
         const scoreElement = document.getElementById('score');
         const cooldownDisplay = document.getElementById('cooldown-display');
         const clickImage = document.getElementById('click-image');
@@ -89,11 +91,13 @@
         function loadLocalData() {
             if (checkLocalStorage()) {
                 const savedData = localStorage.getItem('clickerData');
+                console.log("Raw localStorage data:", savedData);
                 if (savedData) {
                     const data = JSON.parse(savedData);
                     score = data.score || 0;
                     clickValue = data.clickValue || 1;
                     cooldown = data.cooldown || 0.5;
+                    username = data.username || "Unknown";
                     scoreElement.textContent = score;
                     cooldownDisplay.textContent = `КД: ${cooldown.toFixed(1)} сек`;
                     console.log("Загружены локальные данные:", data);
@@ -106,20 +110,21 @@
         // Сохранение локальных данных
         function saveLocalData() {
             if (checkLocalStorage()) {
-                const data = { score, clickValue, cooldown };
+                const data = { score, clickValue, cooldown, username };
                 localStorage.setItem('clickerData', JSON.stringify(data));
                 console.log("Сохранены локальные данные:", data);
             }
         }
 
         // Инициализация Telegram Web App
-        function initializeWebApp(attempt = 1, maxAttempts = 3) {
+        function initializeWebApp(attempt = 1, maxAttempts = 5) {
             console.log(`Попытка ${attempt} инициализации Telegram Web App...`);
             if (window.Telegram && window.Telegram.WebApp) {
                 console.log("Telegram Web App доступен");
                 window.Telegram.WebApp.ready();
                 isWebAppReady = true;
                 const initData = window.Telegram.WebApp.initDataUnsafe;
+                username = initData?.user?.username || initData?.user?.first_name || "Unknown";
                 console.log("Пользователь Telegram:", initData?.user || "Нет данных");
 
                 window.Telegram.WebApp.onEvent('web_app_data', (event) => {
@@ -129,10 +134,11 @@
                         score = data.score || 0;
                         clickValue = data.clickValue || 1;
                         cooldown = data.cooldown || 0.5;
+                        username = data.username || username;
                         scoreElement.textContent = score;
                         cooldownDisplay.textContent = `КД: ${cooldown.toFixed(1)} сек`;
                         console.log("Загружены данные Telegram:", data);
-                        saveLocalData(); // Синхронизация с локальным хранилищем
+                        saveLocalData();
                     }
                 });
                 window.Telegram.WebApp.sendData(JSON.stringify({ request: "load" }));
@@ -143,17 +149,17 @@
                     console.log(`Telegram Web App не найден, повтор через 1 сек (попытка ${attempt + 1}/${maxAttempts})...`);
                     setTimeout(() => initializeWebApp(attempt + 1, maxAttempts), 1000);
                 } else {
-                    console.warn("Telegram Web App не загрузился, использую только локальное сохранение");
+                    console.warn("Telegram Web App не загрузился");
                     errorMessage.style.display = "block";
-                    loadLocalData(); // Загружаем локальные данные
+                    loadLocalData();
                 }
             }
         }
 
         // Запуск
         console.log("Начальная проверка Telegram Web App и localStorage");
+        loadLocalData();
         initializeWebApp();
-        loadLocalData(); // Загружаем локальные данные сразу
 
         // Обработка клика с КД
         clickImage.addEventListener('click', () => {
@@ -162,8 +168,7 @@
                 score += clickValue;
                 scoreElement.textContent = score;
                 lastClick = now;
-                syncWithTelegram();
-                saveLocalData(); // Сохраняем локально после каждого клика
+                saveLocalData();
                 console.log("Клик зарегистрирован, счёт:", score);
             } else {
                 console.log("КД активен, жди:", (cooldown - (now - lastClick)).toFixed(2), "сек");
@@ -176,8 +181,7 @@
                 score -= cost;
                 clickValue += multiplier;
                 scoreElement.textContent = score;
-                syncWithTelegram();
-                saveLocalData(); // Сохраняем локально
+                saveLocalData();
                 alert(`Куплен бустер! Теперь за клик: ${clickValue} очков`);
                 console.log("Куплен бустер, clickValue:", clickValue);
             } else {
@@ -193,8 +197,7 @@
                     cooldown -= reduction;
                     scoreElement.textContent = score;
                     cooldownDisplay.textContent = `КД: ${cooldown.toFixed(1)} сек`;
-                    syncWithTelegram();
-                    saveLocalData(); // Сохраняем локально
+                    saveLocalData();
                     alert(`КД уменьшен! Теперь КД: ${cooldown.toFixed(1)} сек`);
                     console.log("КД уменьшен, новый КД:", cooldown);
                 } else {
@@ -205,22 +208,26 @@
             }
         }
 
-        // Синхронизация с Telegram
-        function syncWithTelegram() {
+        // Синхронизация с ботом по кнопке
+        function syncWithBot() {
             if (isWebAppReady && window.Telegram && window.Telegram.WebApp) {
                 const data = {
                     score: score,
                     clickValue: clickValue,
-                    cooldown: cooldown
+                    cooldown: cooldown,
+                    username: username
                 };
                 try {
                     window.Telegram.WebApp.sendData(JSON.stringify(data));
                     console.log("Данные отправлены в Telegram:", data);
+                    alert("Синхронизация прошла успешно!");
                 } catch (error) {
                     console.error("Ошибка отправки данных:", error);
+                    alert("Ошибка синхронизации!");
                 }
             } else {
-                console.log("Telegram Web App недоступен, данные сохранены локально");
+                console.log("Telegram Web App недоступен");
+                alert("Telegram Web App не работает, данные сохранены локально");
             }
         }
     </script>
