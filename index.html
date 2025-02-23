@@ -42,7 +42,7 @@
 </head>
 <body>
     <div id="game-container">
-        <h1>Уеби меня</h1>
+        <h1>ОАОАОА</h1>
         <p>Очки: <span id="score">0</span></p>
         <p id="cooldown-display">КД: 0.5 сек</p>
         <img id="click-image" src="image.jpg" alt="Кликни меня!">
@@ -60,7 +60,7 @@
     </div>
 
     <script>
-        console.log("Script loaded"); // Проверка загрузки скрипта
+        console.log("Script loaded");
 
         let score = 0;
         let clickValue = 1;
@@ -72,9 +72,9 @@
         const clickImage = document.getElementById('click-image');
         const errorMessage = document.getElementById('error-message');
 
-        // Проверка Telegram Web App с задержкой
-        function initializeWebApp() {
-            console.log("Checking Telegram Web App...");
+        // Проверка Telegram Web App с повторными попытками
+        function initializeWebApp(attempt = 1, maxAttempts = 5) {
+            console.log(`Attempt ${attempt} to initialize Telegram Web App...`);
             if (window.Telegram && window.Telegram.WebApp) {
                 console.log("Telegram Web App is available");
                 window.Telegram.WebApp.ready();
@@ -100,20 +100,22 @@
                 window.Telegram.WebApp.sendData(JSON.stringify({ request: "load" }));
                 console.log("Requested saved data from bot");
             } else {
-                console.error("Telegram Web App is not available after delay");
-                errorMessage.style.display = "block";
-                clickImage.style.pointerEvents = "none";
+                console.log("Telegram object:", window.Telegram);
+                console.log("Telegram.WebApp object:", window.Telegram ? window.Telegram.WebApp : "undefined");
+                if (attempt < maxAttempts) {
+                    console.log(`Telegram Web App not found, retrying in 2 seconds (attempt ${attempt + 1}/${maxAttempts})...`);
+                    setTimeout(() => initializeWebApp(attempt + 1, maxAttempts), 2000);
+                } else {
+                    console.error("Telegram Web App is not available after all attempts");
+                    errorMessage.style.display = "block";
+                    clickImage.style.pointerEvents = "none";
+                }
             }
         }
 
-        // Проверка сразу и с задержкой
+        // Проверка сразу и с повторными попытками
         console.log("Initial check for Telegram Web App");
-        if (window.Telegram && window.Telegram.WebApp) {
-            initializeWebApp();
-        } else {
-            console.log("Telegram Web App not found initially, waiting...");
-            setTimeout(initializeWebApp, 1000);
-        }
+        initializeWebApp();
 
         // Обработка клика с КД
         clickImage.addEventListener('click', () => {
