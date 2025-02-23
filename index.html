@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кликер</title>
+    <title>Я устал Босс</title>
     <style>
         body {
             margin: 0;
@@ -42,10 +42,10 @@
 </head>
 <body>
     <div id="game-container">
-        <h1>Ай, Ай, Ай</h1>
+        <h1>Ура, Разраб сделал игру</h1>
         <p>Очки: <span id="score">0</span></p>
         <p id="cooldown-display">КД: 0.5 сек</p>
-        <img id="click-image" src="image.jpg" alt="Кликни меня!">
+        <img id="click-image" src="image.png" alt="Кликни меня!">
         <div id="shop">
             <h2>Магазин</h2>
             <button onclick="buyBooster(75, 2)">Бустер +2 (75 очков)</button>
@@ -54,10 +54,10 @@
             <button onclick="buyBooster(1000, 100)">Бустер +100 (1000 очков)</button>
             <button onclick="buyBooster(7500, 1000)">Бустер +1000 (7500 очков)</button>
             <button onclick="buyBooster(50000, 10000)">Бустер +10000 (50000 очков)</button>
-            <button onclick="buyCooldownReduction(1700, 0.1)">Уменьшить КД на 0.1с (500 очков)</button>
-            <button onclick="generateSyncLink()">Получить ссылку для синхронизации</button>
+            <button onclick="buyCooldownReduction(1700, 0.05)">Уменьшить КД на 0.05с (1700 очков)</button>
+            <button onclick="syncWithBot()">Синхронизировать с ботом</button>
         </div>
-        <p id="error-message" style="display: none;">Telegram Web App не работает</p>
+        <p id="error-message" style="display: none;">Ошибка синхронизации</p>
     </div>
 
     <script>
@@ -67,12 +67,11 @@
         let clickValue = 1;
         let cooldown = 0.5;
         let lastClick = 0;
-        let username = "Unknown";
+        let username = "Unknown"; // Имя будет перезаписано ботом
         const scoreElement = document.getElementById('score');
         const cooldownDisplay = document.getElementById('cooldown-display');
         const clickImage = document.getElementById('click-image');
         const errorMessage = document.getElementById('error-message');
-        const BOT_USERNAME = "GoreAndCristleGameBot";
 
         // Проверка доступности localStorage
         function checkLocalStorage() {
@@ -110,25 +109,25 @@
         // Сохранение локальных данных
         function saveLocalData() {
             if (checkLocalStorage()) {
-                const data = { score: score, clickValue: clickValue, cooldown: cooldown, username: username };
+                const data = { score, clickValue, cooldown, username };
                 localStorage.setItem('clickerData', JSON.stringify(data));
                 console.log("Сохранены локальные данные:", data);
             }
         }
 
-        // Генерация ссылки для синхронизации
-        function generateSyncLink() {
+        // Генерация команды для синхронизации
+        function syncWithBot() {
             const data = { score: score, clickValue: clickValue, cooldown: cooldown, username: username };
-            console.log("Данные перед кодированием:", data); // Отладка текущих значений
+            console.log("Данные перед кодированием:", data);
             const encodedData = btoa(JSON.stringify(data));
-            const syncLink = `t.me/${BOT_USERNAME}?start=sync_${encodedData}`;
-            console.log("Сгенерирована ссылка для синхронизации:", syncLink);
-            
-            navigator.clipboard.writeText(syncLink).then(() => {
-                alert("Ссылка для синхронизации скопирована! Отправь её боту @GoreAndCristleGameBot.");
+            const syncCommand = `/start sync_${encodedData}`;
+            console.log("Сгенерирована команда для синхронизации:", syncCommand);
+
+            navigator.clipboard.writeText(syncCommand).then(() => {
+                alert("Команда для синхронизации скопирована! Отправь её боту @GoreAndCristleGameBot.");
             }).catch(err => {
                 console.error("Ошибка копирования:", err);
-                alert(`Не удалось скопировать ссылку. Отправь вручную: ${syncLink}`);
+                alert(`Не удалось скопировать команду. Отправь вручную боту @GoreAndCristleGameBot: ${syncCommand}`);
             });
         }
 
